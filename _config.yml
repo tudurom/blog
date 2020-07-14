@@ -1,0 +1,40 @@
+title: tudor's blog
+baseurl: "/blog"
+date_format: "%Y-%m-%d"
+date_format_unix: "%s"
+date_format_post: "%Y-%m-%d %H:%M:%S%:z"
+timezone: Europe/Bucharest
+description: the blog of Tudor Roman
+author: Tudor Roman
+
+exclude:
+  - gemset.nix
+  - default.nix
+  - vendor
+  - technical.md
+  - writing.md
+
+meta:
+    description: the blog of Tudor Roman
+    author: Tudor Roman
+    keywords:
+        - tudor roman
+        - tudor's blog
+        - blog
+        - linux
+        - unix
+    theme-color: '#333'
+
+# Build settings
+kramdown:
+  input: GFM
+permalink: pretty
+
+# Third-party services
+# just leave someone empty to disable it
+google_analytics:
+disqus_shortname:
+
+plugins:
+    - jekyll-feed
+    - jemoji

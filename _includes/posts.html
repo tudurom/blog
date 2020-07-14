@@ -1,0 +1,15 @@
+<div class="home">
+	<ul class="posts">
+		{% for post in site.posts %}
+		{% if include.category != nil and post.category != include.category %}
+			{% continue %}
+		{% endif %}
+		<li
+			onmouseover="this.children[0].innerHTML='{{ post.date | date: site.date_format }}'"
+			onmouseout="this.children[0].innerHTML='{{ post.date | date: site.date_format_unix }}'">
+			<span>{{ post.date | date: site.date_format_unix }}</span>
+			<a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a>
+		</li>
+		{% endfor %}
+	</ul>
+</div>
