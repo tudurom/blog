@@ -10,8 +10,8 @@ the antiquated X11. It promises better security, performance, portability, every
 it sure does deliver, provided that you're not using [unsupported graphics cards](https://www.nvidia.com/).
 You can watch [this talk / rant about X11](https://www.youtube.com/watch?v=RIctzAQOe44) to get an idea about how bad it is.
 
-Some power users also haven't switched to Wayland because their gimmicky window manager doesn't have a
-Wayland equivalent (XMonad, Awesome, Bspwm and the others). Some may wonder "hmm maybe I can port it myself". I wrote this post to make you (re)consider that.
+Some power users also haven't switched to Wayland because their window manager doesn't have a
+Wayland equivalent (XMonad, Awesome, Bspwm and the others, all having their unique feature-set). Some may wonder "hmm maybe I can port it myself". I wrote this post to make you (re)consider that.
 
 One of the main ideas of Wayland is that it's merely a specialised IPC protocol, and the communication is
 strictly between the clients (applications on your screen mainly) and the server.
