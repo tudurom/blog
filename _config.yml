@@ -10,9 +10,8 @@ author: Tudor Roman
 exclude:
   - gemset.nix
   - default.nix
+  - shell.nix
   - vendor
-  - technical.md
-  - writing.md
 
 meta:
     description: the blog of Tudor Roman

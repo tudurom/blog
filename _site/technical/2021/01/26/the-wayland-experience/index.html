@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns#">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="the blog of Tudor Roman">
+	<meta name="author" content="Tudor Roman">
+	<meta name="keywords" content="tudor roman, tudor's blog, blog, linux, unix">
+	<meta name="theme-color" content="#333">
+
+	<meta property="og:title" content="Should You Write a Wayland Compositor?">
+	<meta property="og:type" content="article">
+	<meta property="og:description" content="the blog of Tudor Roman">
+	<meta property="og:author" content="Tudor Roman">
+	<meta property="og:site_name" content="tudor's blog">
+
+	<!-- jekyll-feed gem required -->
+	<link type="application/atom+xml" rel="alternate" href="/blog/feed.xml" title="tudor's blog" />
+
+	<link rel="stylesheet" href="/blog/css/main.css">
+	<link rel="icon" href="/blog/favicon.png">
+	<title>Should You Write a Wayland Compositor? - tudor's blog</title>
+</head>
+<body>
+	<main>
+		<header class="site-header">
+			<h1 class="site-title"><a href="/blog/">tudor's blog</a></h1>
+			<nav class="site-nav">
+				<ul>
+					
+						
+							
+						
+
+					<li>
+						<a href="/blog/about/" class="">
+							
+								About
+							
+						</a>
+					</li>
+					
+						
+							
+						
+							
+						
+
+					<li>
+						<a href="/blog/technical/" class="">
+							
+								Nerd stuff
+							
+						</a>
+					</li>
+					
+						
+
+					<li>
+						<a href="/blog/writing/" class="">
+							
+								Writings
+							
+						</a>
+					</li>
+					
+						
+							
+				</ul>
+			</nav>
+		</header>
+		<article class="post">
+    <h2 class="post-header">Should You Write a Wayland Compositor?</h2>
+    <p class="post-subtitle"></p>
+    <p class="post-meta">2021-01-26 10:59:23+02:00</p>
+    <p><a href="https://wayland.freedesktop.org/">Wayland</a> is the “new” (13 years old already) display server technology on Linux, which is supposed to replace
+the antiquated X11. It promises better security, performance, portability, everything, compared to X11, and
+it sure does deliver, provided that you’re not using <a href="https://www.nvidia.com/">unsupported graphics cards</a>.
+You can watch <a href="https://www.youtube.com/watch?v=RIctzAQOe44">this talk / rant about X11</a> to get an idea about how bad it is.</p>
+
+<p>Some power users also haven’t switched to Wayland because their gimmicky window manager doesn’t have a
+Wayland equivalent (XMonad, Awesome, Bspwm and the others). Some may wonder “hmm maybe I can port it myself”. I wrote this post to make you (re)consider that.</p>
+
+<p>One of the main ideas of Wayland is that it’s merely a specialised IPC protocol, and the communication is
+strictly between the clients (applications on your screen mainly) and the server.</p>
+
+<p>The server is what we are interested in now. Unlike X11, where the server is X.Org and the window manager
+is just an X11 client with special privileges, on Wayland the window manager is also a server and a compositor. In fact, the correct terminology is “Wayland compositor”. This piece of software has the
+task of doing everything it wants with the clients, which is usually among the lines of showing them
+on the screen and giving them inputs events from your keyboards, mice, touchscreens etc. In fact, <a href="https://mir-server.io/">no one
+stops you from leaving window management as an API</a>.</p>
+
+<p>On my laptop, I prefer using GNOME under Wayland, because it has the most stable, fully-featured and “just works”
+experience there is. However, I wanted a better way of organising windows on my screen than leaving them
+shuffled around. Tiling was also not good, because every time you launch a new window, the others get
+shrunk to fit, which is not good on a small laptop display.</p>
+
+<p>Luckily I discovered <a href="https://github.com/paperwm/PaperWM">PaperWM</a>. It’s perfect for laptops, instead of
+shrinking your windows, it just renders them off-screen. To switch between one or the other you can just
+flick three fingers on the touchpad. It’s great. It’s also “glossy” and polished and has great UI and animations.</p>
+
+<p>It has some disadvantages though, mainly concerning its speed. I find it sluggish, and it’s no surprise that
+like all other GNOME Shell extensions, it’s a JavaScript behemoth. PaperWM still uses the GNOME Tweener
+framework for its animations, which is entirely written in JS. Because of that, it needs to communicate with the main
+GNOME compositor process on each operation. And because we’re talking animations, said operations happen
+for <em>every frame</em>. That means there is JS executed for every frame, 60 times a second. It’s horrible!</p>
+
+<p>BTW nowadays GNOME uses animations implemented in C (since GNOME 3.34), the “GNOME runs JS on every frame” statement is for the most part false today.</p>
+
+<p>Because of the inefficiency of PaperWM, it also means that it drains my battery quickly, which is bad for a laptop!</p>
+
+<p>So, because I am a student with a lot of free time, together with <a href="https://alexge50.com/">Alex</a> we figured we shall develop a scrollable tiling (PaperWM-like) Wayland compositor. It’s called <a href="https://gitlab.com/cardboardwm/cardboard">Cardboard</a> (get it??). It also has the nicety of
+being controlled and configured by a remote control program, like bspwm.
+Neither Alex nor I had experience with any kind of Wayland development. However, I wrote <a href="https://tudorr.ro/software/windowchef/">an X11 window manager</a>,
+<a href="https://github.com/tudurom/disputils/">some XRandR querying utilities</a> and <a href="https://github.com/tudurom/ruler">a window rule daemon</a>. Alex has experience
+with <a href="https://git.alexge50.com/a/gie">graphics programming</a> and <a href="https://github.com/alexge50/libwatchpoint">C++ devilry</a>.</p>
+
+<p>Our “tech stack” was <a href="https://github.com/swaywm/wlroots">wlroots</a>, which is an exceptional Wayland compositor library (apart from its lack of documentation). The description from the README is spot on:</p>
+
+<blockquote>
+  <p>About 50,000 lines of code you were going to write anyway.</p>
+</blockquote>
+
+<p>I (because I wrote most of the Wayland-interfacing code) realised soon that there is still a lot of boilerplate involved in writing a compositor, much more than for an X11 window manager,
+namely setting up your own rendering code, registering and storing input devices and screens in your own data structures, passing input events to windows, calculating bounds for bars
+and other overlays (courtesy of <a href="https://github.com/swaywm/wlr-protocols/blob/master/unstable/wlr-layer-shell-unstable-v1.xml"><code class="language-plaintext highlighter-rouge">layer-shell</code></a>) and others. X11 handles all of this for you,
+the window manager just reacts to events regarding window inputs to establish its behaviour. With Wayland, you handle everything, even with wlroots. The upside is that if you don’t like the way X11 does something
+(which is a given), not only that you can do it in your own way on Wayland, you are required to do so.</p>
+
+<p>Because we weren’t really prepared for what writing a compositor involved, we thought that it must be approached like a “normal” program: split code into modules, each with their own responsibilities, call wlroots to do its thing, the usual stuff.
+We are writing a program in our way and wlroots lets us “interface with Wayland”. Or so we thought.</p>
+
+<p>We were as careful as possible to separate responsibilities into different structures / classes, yet we ended up with most functions taking a pointer to <code class="language-plaintext highlighter-rouge">Server</code> as their first parameter.
+<code class="language-plaintext highlighter-rouge">Server</code> is a singleton holding all the other “sub-modules” in it. It represents the compositor itself. The reason most functions need <code class="language-plaintext highlighter-rouge">Server</code> is that everything is related to everything,
+not because of a mistake in structuring the code, but by design. This is what a compositor requires, the problem of writing a compositor is somewhat complex because it has a great deal variables ranging
+from input events, drawing on the screen, creating behaviours that the user leverages, reacting to application events. All of them can affect the other, you can not separate the thing into modules.
+The best you can do is separate the code in different files and folders based on some criteria, like grouping data structures with related routines.</p>
+
+<p>Excerpt from <code class="language-plaintext highlighter-rouge">Seat.h</code>:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">/// Hides the \a view from the screen without unmapping. Happens when a Workspace is deactivated.</span>
+<span class="kt">void</span> <span class="nf">hide_view</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="n">View</span><span class="o">&amp;</span> <span class="n">view</span><span class="p">);</span>
+<span class="c1">/// Gives keyboard focus to a plain surface (OR xwayland usually)</span>
+<span class="kt">void</span> <span class="nf">focus_surface</span><span class="p">(</span><span class="k">struct</span> <span class="nc">wlr_surface</span><span class="o">*</span> <span class="n">surface</span><span class="p">);</span>
+<span class="cm">/**
+  * \brief Sets the focus state on \a view. Auto-scrolls the Workspace if it's tiled.
+  *
+  * If \a view is null, the previously focused view will be unfocused and no other view will be focused.
+  */</span>
+<span class="kt">void</span> <span class="nf">focus_view</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="n">OptionalRef</span><span class="o">&lt;</span><span class="n">View</span><span class="o">&gt;</span> <span class="n">view</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">condense_workspace</span> <span class="o">=</span> <span class="nb">false</span><span class="p">);</span>
+<span class="c1">/// Marks the layer as receiving keyboard focus from this seat.</span>
+<span class="kt">void</span> <span class="nf">focus_layer</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="k">struct</span> <span class="nc">wlr_layer_surface_v1</span><span class="o">*</span> <span class="n">layer</span><span class="p">);</span>
+<span class="cm">/**
+  * \brief Focus the most recently focused view on \a column.
+  *
+  * \param column - must be from this workspace
+  */</span>
+<span class="kt">void</span> <span class="nf">focus_column</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="n">Workspace</span><span class="o">::</span><span class="n">Column</span><span class="o">&amp;</span> <span class="n">column</span><span class="p">);</span>
+<span class="c1">/// Removes the \a view from the focus stack.</span>
+<span class="kt">void</span> <span class="nf">remove_from_focus_stack</span><span class="p">(</span><span class="n">View</span><span class="o">&amp;</span> <span class="n">view</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">begin_move</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="n">View</span><span class="o">&amp;</span> <span class="n">view</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">begin_resize</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="n">View</span><span class="o">&amp;</span> <span class="n">view</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">edges</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">begin_workspace_scroll</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="n">Workspace</span><span class="o">&amp;</span> <span class="n">workspace</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">process_cursor_motion</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">time</span> <span class="o">=</span> <span class="mi">0</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">process_cursor_move</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span><span class="p">,</span> <span class="n">GrabState</span><span class="o">::</span><span class="n">Move</span> <span class="n">move_data</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">process_cursor_resize</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span><span class="p">,</span> <span class="n">GrabState</span><span class="o">::</span><span class="n">Resize</span> <span class="n">resize_data</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">process_swipe_begin</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">fingers</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">process_swipe_update</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">fingers</span><span class="p">,</span> <span class="kt">double</span> <span class="n">dx</span><span class="p">,</span> <span class="kt">double</span> <span class="n">dy</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">process_swipe_end</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">end_interactive</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">);</span>
+<span class="kt">void</span> <span class="nf">end_touchpad_swipe</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">);</span>
+
+<span class="c1">/// Updates the scroll of the workspace during three-finger swipe, taking in account speed and friction.</span>
+<span class="kt">void</span> <span class="nf">update_swipe</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">);</span>
+
+<span class="c1">/// Returns true if the \a view is currently in a grab operation.</span>
+<span class="kt">bool</span> <span class="nf">is_grabbing</span><span class="p">(</span><span class="n">View</span><span class="o">&amp;</span> <span class="n">view</span><span class="p">);</span>
+
+<span class="c1">/// Returns the workspace under the cursor.</span>
+<span class="n">OptionalRef</span><span class="o">&lt;</span><span class="n">Workspace</span><span class="o">&gt;</span> <span class="n">get_focused_workspace</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">);</span>
+
+<span class="c1">/// Moves the focus to a different workspace, if the workspace is already on a monitor, it focuses that monitor</span>
+<span class="kt">void</span> <span class="nf">focus</span><span class="p">(</span><span class="n">Server</span><span class="o">&amp;</span> <span class="n">server</span><span class="p">,</span> <span class="n">Workspace</span><span class="o">&amp;</span> <span class="n">workspace</span><span class="p">);</span> <span class="c1">// TODO: yikes, passing Server*</span>
+</code></pre></div></div>
+
+<p>As an example, let’s take damage tracking. For starters, because the compositor is also tasked with rendering the content and displaying it on the screen, we have some rendering code that runs on every frame.
+Damage tracking is tracking which areas of the screen have changed in an amount of time. An example would
+be typing a letter in the terminal. The place where the cursor is changes to the letter you typed, and the cursor advances.
+If there is no change, the frame is not rendered, as it would look
+exactly the same as the previous one, which would be a waste of processor time.
+This way, instead of re-rendering everything 60 times a second (I assume that you use a common display), we can render and paint as little as possible to account for the changed region.
+You can read <a href="https://emersion.fr/blog/2019/intro-to-damage-tracking/">an introduction to damage tracking</a> written by one of the main developers of wlroots.</p>
+
+<p>I have just implemented the most basic form of damage tracking: do not render the frame if nothing on the screen changes.
+It doesn’t track the damage itself, just that it exists.
+To do this, I first added a <code class="language-plaintext highlighter-rouge">wlr_output_damage</code> object to my <code class="language-plaintext highlighter-rouge">Output</code> structure:</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">struct Output {
+</span>    struct wlr_output* wlr_output;
+    struct wlr_output_damage* wlr_output_damage;
+<span class="gi">+   struct wlr_box usable_area;
+</span>    ...
+</code></pre></div></div>
+
+<p>This structure tracks the damage accumulated per-output, as rendering is also per-output (this means that you can use screens of different refresh rates, yay!). However, to make this initial attempt at
+damage tracking easier, I decided to trigger rendering for all attached outputs. I added a <code class="language-plaintext highlighter-rouge">set_dirty()</code> function to the <code class="language-plaintext highlighter-rouge">OutputManager</code> class that does just that:</p>
+
+<div class="language-cpp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">OutputManager</span><span class="o">::</span><span class="n">set_dirty</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="k">auto</span><span class="o">&amp;</span> <span class="n">output</span> <span class="o">:</span> <span class="n">outputs</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">wlr_output_damage_add_whole</span><span class="p">(</span><span class="n">output</span><span class="p">.</span><span class="n">wlr_output_damage</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This marks every output as entirely damaged, and as such triggers a render.</p>
+
+<p>With this function set into place, I had to identify when does the “screen” change, namely when a window “commits” (changes its contents) and when a window is moved. The window move is one example
+of the way everything is related to everything in the compositor. Before damage tracking, the <code class="language-plaintext highlighter-rouge">View::move()</code> (we call windows “views”) method just changed the <code class="language-plaintext highlighter-rouge">x</code> and <code class="language-plaintext highlighter-rouge">y</code> fields of the <code class="language-plaintext highlighter-rouge">View</code> structures.
+Now, a move must call a method of <code class="language-plaintext highlighter-rouge">OutputManager</code>, so we need to give that as a parameter. This is almost like giving <code class="language-plaintext highlighter-rouge">Server</code> as a parameter, as <code class="language-plaintext highlighter-rouge">OutputManager</code> is a singleton inside <code class="language-plaintext highlighter-rouge">Server</code>.</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gd">-void View::move(int x_, int y_)
+</span><span class="gi">+void View::move(OutputManager&amp; output_manager, int x_, int y_)
+</span><span class="err">{</span>
+    x = x_;
+    y = y_;
+<span class="gi">+   output_manager.set_dirty();
+</span><span class="err">}</span>
+</code></pre></div></div>
+
+<p>That’s when it hit me that wlroots is more of a framework and the compositor is one of its modules. Thinking that wlroots is an “interface to Wayland” is plain wrong, as the Wayland server is the
+program that I am writing. The next refactor is going to make the <code class="language-plaintext highlighter-rouge">Server</code> instance global…</p>
+
+<p>Now that we have a <code class="language-plaintext highlighter-rouge">wlr_output_damage</code> object in place and <code class="language-plaintext highlighter-rouge">set_dirty()</code> calls where they’re needed, we only need to call the render function when <code class="language-plaintext highlighter-rouge">wlr_output_damage</code> tells us instead of
+every <code class="language-plaintext highlighter-rouge">1/60</code> seconds:</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">@@ -46,11 +46,12 @@</span> void register_output(Server&amp; server, Output&amp;&amp; output_)
+    server.output_manager-&gt;outputs.emplace_back(output_);
+    auto&amp; output = server.output_manager-&gt;outputs.back();
+    output.wlr_output-&gt;data = &amp;output;
+<span class="gi">+   output.wlr_output_damage = wlr_output_damage_create(output.wlr_output);
+</span>
+    register_handlers(server,
+                      &amp;output,
+                      {
+<span class="gd">-                         { &amp;output.wlr_output-&gt;events.frame, Output::frame_handler },
+</span><span class="gi">+                         { &amp;output.wlr_output_damage-&gt;events.frame, Output::frame_handler },
+</span>                          { &amp;output.wlr_output-&gt;events.present, Output::present_handler },
+                          { &amp;output.wlr_output-&gt;events.commit, Output::commit_handler },
+                          { &amp;output.wlr_output-&gt;events.mode, Output::mode_handler },
+</code></pre></div></div>
+
+<p>This is not complete code for a basic damage tracking implementation with wlroots. You can see <a href="https://gitlab.com/cardboardwm/cardboard/-/commit/f2ef2ff076ddbbd23994553b8eff131f9bd0207f">the whole commit here</a>.</p>
+
+<p>This is an example of how wlroots provides yet another “module” that we can use in the grand scheme of the compositor. <code class="language-plaintext highlighter-rouge">wlr_output_damage</code> accumulates damaged rectangles in time and even turns these
+numerous small rectangles into a big one as an optimisation. It also calls the frame handler when it’s needed, and this is not only just when something on the screen changed, but also when the underlying “backend”
+of the compositor changes. The simplest situation is when the compositor starts: it needs to render an initial frame so the screen isn’t pitch black.</p>
+
+<p>All in all, I do not recommend writing your own compositor if you only want some gimmicky user interface.
+In the X world there is a WM for every single way of window tiling plus a couple more. It doesn’t work like
+that with Wayland, you will spend more time implementing basic compositor duties than
+on your compositor’s unique features. Instead, if I were to rewrite Cardboard, I would rather do it
+as a <a href="https://github.com/WayfireWM/wayfire/wiki/Plugin-architecture">Wayfire plugin</a> or maybe as a KWin script. However, I think Wayfire is more “enthusiast-friendly”, as it uses <a href="https://github.com/swaywm/wlr-protocols">protocols from
+wlroots</a> such as <code class="language-plaintext highlighter-rouge">layer-shell</code> (for panels, overlays and backgrounds), <code class="language-plaintext highlighter-rouge">gamma-control</code> (for Redshift), <code class="language-plaintext highlighter-rouge">screencopy</code> (for screenshots) and others,
+allowing people to write tools that are not specific to the compositor.</p>
+
+<p>Nevertheless, if you want to do it for the learning experience, I definitely recommend writing
+a “full-fledged” compositor with wlroots, learning from other compositors (<a href="https://github.com/swaywm/sway">Sway</a>,
+<a href="https://github.com/hjdskes/cage">cage</a>, <a href="https://github.com/WayfireWM/wayfire">Wayfire</a>, <a href="https://hikari.acmelabs.space/">hikari</a> and others; cage is the simplest, hikari second simplest) and from their creators on
+IRC (<code class="language-plaintext highlighter-rouge">#sway-devel</code> on Freenode), they are very kind and knowledgeable.</p>
+
+<p>There is also a <a href="https://github.com/swaywm/wlroots/issues/1826">discussion about introducing a high-level scene API in wlroots</a>. Maybe when it will arrive, I will change my opinion.</p>
+
+<p>Recommended lectures:</p>
+<ul>
+  <li><a href="https://drewdevault.com/2018/02/17/Writing-a-Wayland-compositor-1.html">Writing a Wayland Compositor</a>, by Drew DeVault, the author of Sway and wlroots</li>
+  <li><a href="https://wayland-book.com/">The Wayland Protocol Book</a>, also by Drew DeVault</li>
+  <li><a href="https://wayland.freedesktop.org/docs/html/">The Wayland Protocol</a>, the actual protocol (larger than the book)</li>
+  <li>Posts from Simon Ser’s blog, maintainer of Sway and wlroots:
+    <ul>
+      <li><a href="https://emersion.fr/blog/2018/wayland-rendering-loop/">Writing a Wayland rendering loop</a></li>
+      <li><a href="https://emersion.fr/blog/2019/intro-to-damage-tracking/">Introduction to damage tracking</a></li>
+      <li><a href="https://emersion.fr/blog/2020/wayland-clipboard-drag-and-drop/">Wayland clipboard and drag &amp; drop</a></li>
+    </ul>
+  </li>
+  <li><a href="https://github.com/WayfireWM/wayfire/blob/cb7920187d2546ca375f00e7ef0a71d7a4995ba6/src/core/core.cpp#L173">The init routine of Wayfire</a>. GTK is rather picky when it comes to the order of advertised Wayland protocols.
+Don’t waste hours of your life trying to figure out whether you did something wrong, it’s GTK…</li>
+</ul>
+
+<p>Also, I suggest you write the compositor in either C, C++ or Zig (with <a href="https://github.com/swaywm/zig-wlroots">zig-wlroots</a> or just doing your thing, Zig is C compatible).
+See this article on why the <a href="http://way-cooler.org/blog/2019/04/29/rewriting-way-cooler-in-c.html">Rust bindings failed</a>.</p>
+
+    
+</article>
+
+		<footer>
+			<hr />
+			<nav class="footer-nav">
+				<ul>
+					
+					<a href="/blog/" id="back_link">Back</a>
+					
+					<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width: 0; float: right;" src="/blog/assets/cc.png" /></a>
+				</ul>
+			</nav>
+	    </footer>
+	</main>
+	
+</body>
+</html>
