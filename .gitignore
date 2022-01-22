@@ -4,3 +4,4 @@ css/.sass-cache
 vendor
 .bundle
 .jekyll-cache
+_site
