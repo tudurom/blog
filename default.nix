@@ -1,20 +1,19 @@
-with import <nixpkgs> { };
-
-let jekyllEnv = bundlerEnv rec {
+{ pkgs ? import <nixpkgs> }:
+let jekyllEnv = pkgs.bundlerEnv rec {
   name = "jekyllEnv";
-  inherit ruby;
+  inherit (pkgs) ruby;
   gemfile = ./Gemfile;
   lockfile = ./Gemfile.lock;
   gemset = ./gemset.nix;
 };
 in
-  stdenv.mkDerivation rec {
+  pkgs.stdenv.mkDerivation rec {
     name = "tudorBlog";
     version = "unstable";
 
     src = ./.;
 
-    nativeBuildInputs = [ jekyllEnv bundler ruby ];
+    nativeBuildInputs = with pkgs; [ jekyllEnv bundler ruby ];
     dontInstall = true;
 
     buildPhase = ''

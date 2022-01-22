@@ -1,8 +1,7 @@
-with import <nixpkgs> { };
-
-let jekyllEnv = bundlerEnv rec {
+{ pkgs ? import <nixpkgs> }:
+let jekyllEnv = pkgs.bundlerEnv rec {
   name = "jekyllEnv";
-  inherit ruby;
+  inherit (pkgs) ruby;
   gemfile = ./Gemfile;
   lockfile = ./Gemfile.lock;
   gemset = ./gemset.nix;
