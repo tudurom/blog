@@ -5,3 +5,5 @@ vendor
 .bundle
 .jekyll-cache
 _site
+result
+.direnv

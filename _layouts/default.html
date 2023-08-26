@@ -17,6 +17,13 @@
 	<!-- jekyll-feed gem required -->
 	{% feed_meta %}
 
+	<link rel="preload" as="font" href="{{ site.baseurl }}/fonts/fira-mono-v9-latin-ext_latin-regular.woff2" crossorigin>
+	<link rel="preload" as="font" href="{{ site.baseurl }}/fonts/merriweather-v22-latin-ext_latin-regular.woff2" crossorigin>
+	<link rel="preload" as="font" href="{{ site.baseurl }}/fonts/merriweather-v22-latin-ext_latin-italic.woff2" crossorigin>
+	<link rel="preload" as="font" href="{{ site.baseurl }}/fonts/merriweather-v22-latin-ext_latin-700.woff2" crossorigin>
+	<link rel="preload" as="style" href="{{ site.baseurl }}/css/fonts.css">
+
+	<link rel="stylesheet" href="{{ site.baseurl }}/css/fonts.css">
 	<link rel="stylesheet" href="{{ site.baseurl }}/css/main.css">
 	<link rel="icon" href="{{ site.baseurl }}/favicon.png">
 	<title>{% if page.title %}{{ page.title }} - {% endif %}{{ site.title }}</title>
@@ -50,25 +57,11 @@
 			<hr />
 			<nav class="footer-nav">
 				<ul>
-					{% if page.layout == 'post' %}
-					<a href="{{ site.baseurl }}/" id="back_link">Back</a>
-					{% else %}
-					<a href="/" id="back_link">Root</a>
-					{% endif %}
+					<a href="{{ site.baseurl }}/" id="back_link">Root</a>
 					<a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width: 0; float: right;" src="{{ site.baseurl }}/assets/cc.png" /></a>
 				</ul>
 			</nav>
 	    </footer>
 	</main>
-	{% if site.google_analytics %}
-	<script>
-		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-		ga('create', '{{ site.google_analytics }}', 'auto');
-		ga('send', 'pageview');
-	</script>
-	{% endif %}
 </body>
 </html>
