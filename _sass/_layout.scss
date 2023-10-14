@@ -33,7 +33,7 @@ main {
 					&:hover {
 						text-decoration: none;
 					}
-					&.active {
+					&.active, &:hover {
 						border-bottom: 2px solid #666;
 					}
 					+ a {
