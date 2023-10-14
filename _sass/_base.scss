@@ -26,9 +26,15 @@ h4,
 h5,
 h6 {
     font-family: $header-font-family;
-    font-weight: 300;
+    font-weight: 440;
     word-wrap: break-word;
 }
+
+h2 {
+    font-size: 24px;
+    letter-spacing: -0.022em;
+}
+
 blockquote {
     font-style: italic;
     padding-left: 1rem;

@@ -6,7 +6,9 @@ main {
 }
 .site-header {
     .site-title {
-        font-weight: 300;
+        font-weight: 550;
+        font-size: 32px;
+        letter-spacing: -0.022em;
         > a {
             color: $text-color;
             text-decoration: none;
@@ -17,6 +19,9 @@ main {
 			list-style-type: none;
 			margin: 0;
 			padding: 0;
+      font-weight: 500;
+      font-size: 16px;
+      letter-spacing: -0.011em;
 			li {
 				display: inline-block;
 				+ li:before {
@@ -76,6 +81,8 @@ main {
         color: $meta-color;
         font-size: $small-font-size;
         font-family: $header-font-family;
+        letter-spacing: -0.006em;
+        font-weight: 440;
     }
 }
 @media screen and (max-width: 48rem) {
