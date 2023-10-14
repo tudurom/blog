@@ -69,8 +69,16 @@ The examples also show nice ways to use it together with `fd`.
 Example usage:
 
 ```shell
-$ dmesg | sd -f i intel AMD
+# -f i stands for `flags: case insensitive'
+$ sd -f i emacs VIM file.txt
+# sd does by default in-place substitution, so this will print nothing.
+# we can do, however, the following
+$ sd -f i -p emacs VIM file.txt
+The original VIM did not have Lisp in it. The lower level language, the non-interpreted language—was PDP-10 Assembler.
+The interpreter we wrote in that actually wasn't written for VIM, it was written for TECO.
 ```
+
+_Text fragment taken from [here](https://www.gnu.org/gnu/rms-lisp.html)_.
 
 This one is also available in the repositories of some popular distros: `rust-sd` for Fedora and Ubuntu (but no EPEL);
 `sd` in Nixpkgs. [Repology][repology-sd].
